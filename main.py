@@ -148,7 +148,7 @@ while True:
     }
     
     if 't' in locals():
-        data['temperature'] = t
+        data['temperature'] = 200
         
     if 'h' in locals():
         data['humidity'] = h
