@@ -181,11 +181,13 @@ class OTAUpdater:
 
     def _install_new_version(self):
         print('Installing new version at {} ...'.format(self.modulepath(self.main_dir)))
-        if self._os_supports_rename():
-            os.rename(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
-        else:
-            self._copy_directory(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
-            self._rmtree(self.modulepath(self.new_version_dir))
+        #if self._os_supports_rename():
+        #    os.rename(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
+        #else:
+        #    self._copy_directory(self.modulepath(self.new_version_dir), self.modulepath(self.main_dir))
+        #    self._rmtree(self.modulepath(self.new_version_dir))
+        for entry in os.ilistdir('next'):
+            self._copy_file('next' + '/' + entry[0], entry[0])
         print('Update installed, please reboot now')
 
     def _rmtree(self, directory):
