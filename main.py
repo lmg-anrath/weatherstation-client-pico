@@ -5,7 +5,6 @@ import re
 
 import network
 import urequests
-import ulogging
 
 import time
 import ntptime
@@ -15,22 +14,45 @@ from bmp280 import BMP280, BMP280_CASE_WEATHER
 import bme280
 import sds011
 
-@staticmethod
-def _otaUpdate():
-    ulogging.info('Checking for Updates...')
-    from ota_updater import OTAUpdater
-    otaUpdater = OTAUpdater('https://github.com/lmg-anrath/weatherstation-client-pico')
-    otaUpdater.install_update_if_available()
-    del(otaUpdater)
-    machine.reset()
-
-_otaUpdate()
-
-# TEST COMMIT
+import os
+for entry in os.ilistdir('/'):
+    print(entry)
 
 with open('config.json', 'r') as f:
     config = json.load(f)
     f.close()
+
+station = network.WLAN(network.STA_IF)
+station.active(True)
+def connect():
+    if station.isconnected() == True:
+        print('Network connection already established!')
+        return
+    station.active(True)
+    station.connect(config['ssid'], config['password'])
+    while station.isconnected() == False:
+        print('Waiting for connection...')
+        sleep(1)
+    ip = station.ifconfig()[0]
+    print(f'Connected on {ip}')
+def disconnect():
+    if station.active() == True:
+        station.active(False)
+    if station.isconnected() == False:
+        print('Disconnected!')
+
+print('Establishing network connection...')
+connect()
+
+def _otaUpdate():
+    print('Checking for Updates...')
+    from ota_updater import OTAUpdater
+    otaUpdater = OTAUpdater('https://github.com/lmg-anrath/weatherstation-client-pico', main_dir="/")
+    otaUpdater.install_update_if_available()
+    del(otaUpdater)
+    #machine.reset()
+
+_otaUpdate()
 
 print('Loading sensors...')
 
@@ -62,27 +84,6 @@ except OSError as e:
 
 print('Successfully loaded all sensors.')
 
-station = network.WLAN(network.STA_IF)
-station.active(True)
-def connect():
-    if station.isconnected() == True:
-        print('Network connection already established!')
-        return
-    station.active(True)
-    station.connect(config['ssid'], config['password'])
-    while station.isconnected() == False:
-        print('Waiting for connection...')
-        sleep(1)
-    ip = station.ifconfig()[0]
-    print(f'Connected on {ip}')
-def disconnect():
-    if station.active() == True:
-        station.active(False)
-    if station.isconnected() == False:
-        print('Disconnected!')
-
-print('Establishing network connection...')
-connect()
 ntptime.settime()
 
 sleep(25)

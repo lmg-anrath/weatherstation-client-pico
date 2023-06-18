@@ -1,5 +1,5 @@
 import os, gc
-from .httpclient import HttpClient
+from httpclient import HttpClient
 
 class OTAUpdater:
     """
@@ -171,9 +171,13 @@ class OTAUpdater:
             print('Copied secrets file from {} to {}'.format(fromPath, toPath))
 
     def _delete_old_version(self):
-        print('Deleting old version at {} ...'.format(self.modulepath(self.main_dir)))
-        self._rmtree(self.modulepath(self.main_dir))
-        print('Deleted old version at {} ...'.format(self.modulepath(self.main_dir)))
+        print('Deleting old version at {} ...'.format('/'))
+        try:
+            for entry in os.ilistdir('/'):
+                os.remove(entry[0])
+        except OSError as e:
+            print(e)
+        print('Deleted old version at {} ...'.format('/'))
 
     def _install_new_version(self):
         print('Installing new version at {} ...'.format(self.modulepath(self.main_dir)))
@@ -186,12 +190,7 @@ class OTAUpdater:
 
     def _rmtree(self, directory):
         for entry in os.ilistdir(directory):
-            is_dir = entry[1] == 0x4000
-            if is_dir:
-                self._rmtree(directory + '/' + entry[0])
-            else:
-                os.remove(directory + '/' + entry[0])
-        os.rmdir(directory)
+            os.remove(directory + entry[0])
 
     def _os_supports_rename(self) -> bool:
         self._mk_dirs('otaUpdater/osRenameTest')
