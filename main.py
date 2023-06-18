@@ -5,6 +5,7 @@ import re
 
 import network
 import urequests
+import ulogging
 
 import time
 import ntptime
@@ -13,6 +14,17 @@ from dht import DHT22
 from bmp280 import BMP280, BMP280_CASE_WEATHER
 import bme280
 import sds011
+
+@staticmethod
+def _otaUpdate():
+    ulogging.info('Checking for Updates...')
+    from ota_updater import OTAUpdater
+    otaUpdater = OTAUpdater('https://github.com/lmg-anrath/weatherstation-client-pico')
+    otaUpdater.install_update_if_available()
+    del(otaUpdater)
+    machine.reset()
+
+_otaUpdate()
 
 with open('config.json', 'r') as f:
     config = json.load(f)
