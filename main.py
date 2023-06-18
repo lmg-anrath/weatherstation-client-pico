@@ -3,15 +3,10 @@ from time import sleep
 import json
 import re
 import _thread
-
-# Secret file test
-
 import network
 import urequests
-
 import time
 import ntptime
-
 from dht import DHT22
 from bmp280 import BMP280, BMP280_CASE_WEATHER
 import bme280
