@@ -163,12 +163,11 @@ class OTAUpdater:
         self.http_client.get('https://raw.githubusercontent.com/{}/{}/{}'.format(self.github_repo, version, gitPath), saveToFile=path)
 
     def _copy_secrets_file(self):
-        if self.secrets_file:
-            fromPath = self.modulepath(self.main_dir + '/' + self.secrets_file)
-            toPath = self.modulepath(self.new_version_dir + '/' + self.secrets_file)
-            print('Copying secrets file from {} to {}'.format(fromPath, toPath))
-            self._copy_file(fromPath, toPath)
-            print('Copied secrets file from {} to {}'.format(fromPath, toPath))
+        fromPath = 'config.json'
+        toPath = 'next' + '/' + 'config.json'
+        print('Copying secrets file from {} to {}'.format(fromPath, toPath))
+        self._copy_file(fromPath, toPath)
+        print('Copied secrets file from {} to {}'.format(fromPath, toPath))
 
     def _delete_old_version(self):
         print('Deleting old version at {} ...'.format('/'))
