@@ -187,6 +187,9 @@ class OTAUpdater:
         #    self._rmtree(self.modulepath(self.new_version_dir))
         for entry in os.ilistdir('next'):
             self._copy_file('next' + '/' + entry[0], entry[0])
+        for entry in os.ilistdir('next'):
+            os.remove(entry[0])
+        os.rmdir('next')
         print('Update installed, please reboot now')
 
     def _rmtree(self, directory):
@@ -248,3 +251,4 @@ class OTAUpdater:
 
     def modulepath(self, path):
         return self.module + '/' + path if self.module else path
+

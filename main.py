@@ -2,6 +2,7 @@ from machine import Pin, I2C, RTC, UART
 from time import sleep
 import json
 import re
+import _thread
 
 # Secret file test
 
@@ -16,32 +17,24 @@ from bmp280 import BMP280, BMP280_CASE_WEATHER
 import bme280
 import sds011
 
-import os
-for entry in os.ilistdir('/'):
-    print(entry)
-
 with open('config.json', 'r') as f:
     config = json.load(f)
     f.close()
 
-station = network.WLAN(network.STA_IF)
-station.active(True)
 def connect():
+    time.sleep(10)
+    station = network.WLAN(network.STA_IF)
+    station.active(True)
     if station.isconnected() == True:
         print('Network connection already established!')
         return
-    station.active(True)
+    print(config['ssid'], config['password'])
     station.connect(config['ssid'], config['password'])
     while station.isconnected() == False:
         print('Waiting for connection...')
         sleep(1)
     ip = station.ifconfig()[0]
     print(f'Connected on {ip}')
-def disconnect():
-    if station.active() == True:
-        station.active(False)
-    if station.isconnected() == False:
-        print('Disconnected!')
 
 print('Establishing network connection...')
 connect()
@@ -49,10 +42,21 @@ connect()
 def _otaUpdate():
     print('Checking for Updates...')
     from ota_updater import OTAUpdater
-    otaUpdater = OTAUpdater('https://github.com/lmg-anrath/weatherstation-client-pico', main_dir="/")
-    otaUpdater.install_update_if_available()
-    del(otaUpdater)
-    #machine.reset()
+    try:
+        otaUpdater = OTAUpdater('https://github.com/lmg-anrath/weatherstation-client-pico', main_dir="/")
+        updated = otaUpdater.install_update_if_available()
+        del(otaUpdater)
+    except OSError as e:
+        machine.reset()
+    if updated:
+        machine.reset()
+    else:
+        print("No new update")
+
+try:
+    ntptime.settime()
+except OSError as e:
+    machine.reset()
 
 _otaUpdate()
 
@@ -86,16 +90,16 @@ except OSError as e:
 
 print('Successfully loaded all sensors.')
 
-ntptime.settime()
-
 sleep(25)
 
+runs = 0
 while True:
             
     (year, month, day, hour, minute, second, wday, yday) = time.localtime()
     wait_time = ((minute // 15 + 1) * 15 - minute) * 60 - second
     print('Waiting %s seconds...' %wait_time)
     #time.sleep(wait_time)
+    sleep(30)
     
     timestamp = str(round(time.time()))
     upload = True
@@ -114,7 +118,6 @@ while True:
             print('Humidity: %3.1f %%' %h)
         except OSError as e:
             print('DHT11 Sensor Reading failed!')
-            upload = False
     if bmpUse:
         print('-- BMP280 Sensor --')
         try:
@@ -124,7 +127,6 @@ while True:
             print('Pressure: %3.2f hPa' %p)
         except OSError as e:
             print('BMP280 Sensor Reading failed!')
-            upload = False
     if sdsUse:
         print('-- SDS011 Sensor --')
         status = sds.read()
@@ -138,10 +140,8 @@ while True:
             a10 = sds.pm10
             print('PM25:', sds.pm25)
             print('PM10:', sds.pm10)
+            
     print('Finished reading data.')
-    if upload == False:
-        print('Uploading failed due to insufficient data!')
-        continue
     data = {
         'timestamp': timestamp,
     }
@@ -160,8 +160,6 @@ while True:
         
     if 'a10' in locals():
         data['air_particle_pm10'] = a10
-        
-    print(data)
     
     print('Uploading data...')
     
@@ -169,68 +167,15 @@ while True:
         'Content-Type': 'application/json',
         'Authorization': config['accessToken']
     }
-    res = urequests.post(config['url'] + '/v2/stations/' + str(config['stationId']), data = json.dumps(data), headers = headers)
-    print('Upload completed with status code %s!' %res.status_code)
-    print('Response from server: ' + res.text)
-    res.close()
-
-
-"""
-from machine import UART, Pin, I2C
-import time
-import sds011
-from utime import sleep
-from dht import DHT22
-import bme280 
-
-tx = Pin(8)
-rx = Pin(9)
-
-uart = UART(1, baudrate=9600, rx=rx, tx=tx)
-dust_sensor = sds011.SDS011(uart)
-dust_sensor.sleep()
-
-sleep(1)
-dht22_sensor = DHT22(Pin(15, Pin.IN, Pin.PULL_UP))
-
-i2c=I2C(0,sda=Pin(20), scl=Pin(21), freq=400000)
-
-err_num = 0
-
-dust_sensor.wake()
-
-time.sleep(10)
-
-try:
-    while True:
-        #Datasheet says to wait for at least 30 seconds...
-        #Returns NOK if no measurement found in reasonable time
-        status = dust_sensor.read()
-        #Returns NOK if checksum failed
-        pkt_status = dust_sensor.packet_status
-        #Stop fan
-        dust_sensor.sleep()
-        if(status == False):
-            print('Measurement failed.')
-            err_num = err_num + 1
-        elif(pkt_status == False):
-            print('Received corrupted data.')
-            err_num = err_num + 1
-        else:
-            print('PM25:\t\t\t', dust_sensor.pm25)
-            print('PM10:\t\t\t', dust_sensor.pm10)
-            
-        dht22_sensor.measure()
-        temp = dht22_sensor.temperature()
-        humi = dht22_sensor.humidity()
-        # Werte ausgeben
-        print('Temperatur:\t\t', temp, '°C')
-        print('Luftfeuchtigkeit:\t', humi, '%')
-        
-        bme = bme280.BME280(i2c=i2c)          #BME280 object created
-        print('Luftdruck:\t\t', bme.values[1])
-        print()
-
-        time.sleep(15)
-except KeyboardInterrupt:
-    print(err_num)"""
+    
+    try:
+        res = urequests.post(config['url'] + '/v2/stations/' + str(config['stationId']), data = json.dumps(data), headers = headers)
+        print('Upload completed with status code %s!' %res.status_code)
+        print('Response from server: ' + res.text)
+        res.close()
+    except OSError as e:
+        machine.reset()
+    runs = runs + 1
+    _otaUpdate()
+    if (runs >= 24):
+        machine.reset()
