@@ -188,7 +188,7 @@ class OTAUpdater:
         for entry in os.ilistdir('next'):
             self._copy_file('next' + '/' + entry[0], entry[0])
         for entry in os.ilistdir('next'):
-            os.remove(entry[0])
+            os.remove('next/' + entry[0])
         os.rmdir('next')
         print('Update installed, please reboot now')
 
