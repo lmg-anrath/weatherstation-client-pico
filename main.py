@@ -99,8 +99,7 @@ while True:
     (year, month, day, hour, minute, second, wday, yday) = time.localtime()
     wait_time = ((minute // 15 + 1) * 15 - minute) * 60 - second
     print('Waiting %s seconds...' %wait_time)
-    #time.sleep(wait_time)
-    sleep(30)
+    time.sleep(wait_time)
     
     timestamp = str(round(time.time()))
     upload = True
@@ -148,7 +147,7 @@ while True:
     }
     
     if 't' in locals():
-        data['temperature'] = 200
+        data['temperature'] = t
         
     if 'h' in locals():
         data['humidity'] = h
