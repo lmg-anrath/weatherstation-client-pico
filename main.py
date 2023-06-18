@@ -42,6 +42,7 @@ connect()
 def _otaUpdate():
     print('Checking for Updates...')
     from ota_updater import OTAUpdater
+    updated = True
     try:
         otaUpdater = OTAUpdater('https://github.com/lmg-anrath/weatherstation-client-pico', main_dir="/")
         updated = otaUpdater.install_update_if_available()
