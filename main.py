@@ -26,6 +26,8 @@ def _otaUpdate():
 
 _otaUpdate()
 
+# TEST COMMIT
+
 with open('config.json', 'r') as f:
     config = json.load(f)
     f.close()
