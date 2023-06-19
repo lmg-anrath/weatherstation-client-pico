@@ -25,8 +25,12 @@ def connect():
         return
     print(config['ssid'], config['password'])
     station.connect(config['ssid'], config['password'])
+    count = 0
     while station.isconnected() == False:
         print('Waiting for connection...')
+        count = count + 1
+        if (count > 30):
+            machine.reset()
         sleep(1)
     ip = station.ifconfig()[0]
     print(f'Connected on {ip}')
