@@ -23,7 +23,6 @@ def connect():
     if station.isconnected() == True:
         print('Network connection already established!')
         return
-    print(config['ssid'], config['password'])
     station.connect(config['ssid'], config['password'])
     count = 0
     while station.isconnected() == False:
