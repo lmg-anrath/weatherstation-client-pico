@@ -12,6 +12,8 @@ from bmp280 import BMP280, BMP280_CASE_WEATHER
 import bme280
 import sds011
 
+#
+
 with open('config.json', 'r') as f:
     config = json.load(f)
     f.close()
